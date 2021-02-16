@@ -19,6 +19,8 @@ class Enigma:
         self.rots = [rot1, rot2, rot3]
         self.shifts = [shift1, shift2, shift3]
         self.pairs = pairs.upper()
+        self.position_before_shift2 = False
+        self.shift2_status = False
 
     def __rotor(self, symbol, n, reverse=False):
         if reverse:
@@ -50,24 +52,25 @@ class Enigma:
                 else:
                     return j[0]
 
+    def __shift_rotor(self):
+        self.shifts[2] = (self.shifts[2] + 1) % 26
+        if self.position_before_shift2:
+            self.shifts[1] = (self.shifts[1] + 1) % 26
+            self.position_before_shift2 = False
+        if self.shifts[2] == self.__shift_rots[self.rots[2]]:
+            self.shifts[1] = (self.shifts[1] + 1) % 26
+            self.shift2_status = False
+        if self.shifts[1] == self.__shift_rots[self.rots[1]] and not self.shift2_status:
+            self.shifts[0] = (self.shifts[0] + 1) % 26
+            self.shift2_status = True
+        elif self.shifts[1] == self.__shift_rots[self.rots[1]] - 1:
+            self.position_before_shift2 = True
+
     def encrypt(self):
         encrypted_text = ''
-        f1 = 0
-        r1 = 0
         for symbol in self.text:
-            if f1 == 1:
-                self.shifts[1] = (self.shifts[1] + 1) % 26
-                f1 = 0
-            self.shifts[2] = (self.shifts[2] + 1) % 26
+            self.__shift_rotor()
 
-            if self.shifts[2] == self.__shift_rots[self.rots[2]]:
-                self.shifts[1] = (self.shifts[1] + 1) % 26
-                r1 = 0
-            if self.shifts[1] == self.__shift_rots[self.rots[1]] and r1 == 0:
-                self.shifts[0] = (self.shifts[0] + 1) % 26
-                r1 = 1
-            if self.shifts[1] == self.__shift_rots[self.rots[1]] - 1:
-                f1 = 1
             for rot in (3, 2, 1):
                 symbol = self.__rotor(self.__caesar(symbol, rot, 1), self.rots[rot - 1])
 
@@ -85,4 +88,3 @@ def enigma(text, ref, rot1, shift1, rot2, shift2, rot3, shift3):
     return e.encrypt()
 
 
-print(enigma('AAAAA AAAAA', 1, 1, 0, 2, 0, 1, 0))
