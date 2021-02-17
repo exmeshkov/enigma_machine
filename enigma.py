@@ -21,6 +21,12 @@ class Enigma:
         self.pairs = pairs.upper()
         self.position_before_shift2 = False
         self.shift2_status = False
+        self.pairs = pairs.upper()
+        for char in self.pairs.replace(' ', ''):
+            if self.pairs.replace(' ', '').count(char) > 1:
+                print('Impossible commutation')
+                exit()
+        self.pairs = self.pairs.split()
 
     def __rotor(self, symbol, n, reverse=False):
         if reverse:
@@ -66,10 +72,20 @@ class Enigma:
         elif self.shifts[1] == self.__shift_rots[self.rots[1]] - 1:
             self.position_before_shift2 = True
 
+    def __commutation(self, symbol):
+        if self.pairs:
+            for i in range(len(self.pairs)):
+                if symbol == self.pairs[i][0]:
+                    return self.pairs[i][1]
+                elif symbol == self.pairs[i][1]:
+                    return self.pairs[i][0]
+        return symbol
+
     def encrypt(self):
         encrypted_text = ''
         for symbol in self.text:
             self.__shift_rotor()
+            symbol = self.__commutation(symbol)
 
             for rot in (3, 2, 1):
                 symbol = self.__rotor(self.__caesar(symbol, rot, 1), self.rots[rot - 1])
@@ -79,12 +95,12 @@ class Enigma:
             for rot in (1, 2, 3):
                 symbol = self.__caesar(self.__rotor(symbol, self.rots[rot - 1], reverse=True), rot, -1)
 
+            symbol = self.__commutation(symbol)
             encrypted_text += symbol
+
         return encrypted_text
 
 
-def enigma(text, ref, rot1, shift1, rot2, shift2, rot3, shift3):
-    e = Enigma(text, ref, rot1, shift1, rot2, shift2, rot3, shift3)
+def enigma(text, ref, rot1, shift1, rot2, shift2, rot3, shift3, pairs=''):
+    e = Enigma(text, ref, rot1, shift1, rot2, shift2, rot3, shift3, pairs)
     return e.encrypt()
-
-
